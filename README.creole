@@ -73,3 +73,6 @@ Erwin is being developed for TeamChat.net, here is what there is todo:
 ** and any changes should come back to Erwin's IRC client through a COMET service
 * add the ability to call multiple handlers
 ** if a handler fails, try another server, for example
+
+Also note that this repo might have to split to reflect sensible
+packaging of the backends and frontends of erwin.
