@@ -41,7 +41,6 @@ You can also see that the erwin client passes variables to the HTTP
 service, the following variables are passed:
 
 | variable | meaning                                               |
-|----------+-------------------------------------------------------|
 | sender   | the person who was talking to Erwin on the IRC server |
 | target   | the way erwin was targetted                           |
 
