@@ -1,0 +1,75 @@
+= Erwin =
+
+Erwin is a robot. Erwin does mean something. It means //Emacs Robot
+Wtihin IRC Network// but just like we don't worry about each others
+names you shouldn't worry about what Erwin's mean. He has feelings you
+know. Well, he doesn't, but they are planned.
+
+Erwin is a client server robot. An IRC client connects to any IRC
+server to listen for when he is needed. When he is needed he sends
+requests to an HTTP server. Of course, the HTTP server may be located
+in the cloud. Therefore Erwin is the beginning of SkyNet. We always
+said it would come from Emacs. Let's try not to piss him off.
+
+
+== Writing new functionality ==
+
+To add functionality to Erwin, exterminating Sarah Connor for example,
+can be done by writing a web handler to implement the functionality
+and then registering the URL for the functionality with the Erwin IRC
+client process.
+
+The URL must return a JSON object for Erwin to understand it. The JSON
+object must include a key //erwin// which is the message for the Erwin
+IRC client to display back to the IRC channel or user. The //erwin//
+key string may include references to other keys in the JSON
+object. Here's an example of an Elnode service for Erwin:
+
+{{{
+(defun erwin-say-hello-service (httpcon)
+   (elnode-send-json 
+     httpcon 
+     `(("erwin" . "hello ${name} you look ${compliment}")
+       ("name" . ,(elnode-http-param httpcon "sender"))
+       ("compliment" . "like sarah connor"))))
+}}}
+
+The //erwin// key in the alist shows the key reference system you can
+use.
+
+You can also see that the erwin client passes variables to the HTTP
+service, the following variables are passed:
+
+| variable | meaning                                               |
+|----------+-------------------------------------------------------|
+| sender   | the person who was talking to Erwin on the IRC server |
+| target   | the way erwin was targetted                           |
+
+Other fields //may// be passed on the URL as with any other HTTP
+service.
+
+== Registering new functionality ==
+
+Erwin does not willy nilly accept extensions to his brain. He requires
+you to tell him about them. You must have control of the Emacs
+instance running Erwin's IRC client to do this.
+
+{{{
+(erwin/db-put 
+  "^erwin[:, ] *insult \\(.*\\)"
+  "http://localhost:8007/insult/?who=$1")
+}}}
+
+== TODO ==
+
+Erwin is being developed for TeamChat.net, here is what there is todo:
+
+* make COMET URLs where Erwin will call the HTTP service on registration
+** this is so you can write Erwin handlers to poll services and have Erwin send unsolicited stuff into the channel
+* make an IRC interface for registering Erwin handlers
+* make an HTTP interface for registering Erwin handlers
+* move the database of Erwin handlers to an Erwin handler
+** the IRC client should download the whole database on startup
+** and any changes should come back to Erwin's IRC client through a COMET service
+* add the ability to call multiple handlers
+** if a handler fails, try another server, for example
