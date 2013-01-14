@@ -15,9 +15,9 @@ said it would come from Emacs. Let's try not to piss him off.
 == Writing new functionality ==
 
 To add functionality to Erwin, exterminating Sarah Connor for example,
-can be done by writing a web handler to implement the functionality
-and then registering the URL for the functionality with the Erwin IRC
-client process.
+you need to write a web handler to implement the functionality and
+then register the URL for the functionality with the Erwin IRC client
+process.
 
 The URL must return a JSON object for Erwin to understand it. The JSON
 object must include a key //erwin// which is the message for the Erwin
