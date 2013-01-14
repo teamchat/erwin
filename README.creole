@@ -1,8 +1,8 @@
 = Erwin =
 
-Erwin is a robot. Erwin does mean something. It means //Emacs Robot
-Wtihin IRC Network// but just like we don't worry about each others
-names you shouldn't worry about what Erwin's mean. He has feelings you
+Erwin is a robot. Erwin does mean something: //Emacs Robot Wtihin IRC
+Network//. But just like we don't worry about each others names, you
+shouldn't worry about what Erwin's means. He has feelings you
 know. Well, he doesn't, but they are planned.
 
 Erwin is a client server robot. An IRC client connects to any IRC
