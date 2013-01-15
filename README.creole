@@ -47,6 +47,9 @@ service, the following variables are passed:
 Other fields //may// be passed on the URL as with any other HTTP
 service.
 
+Do //not// try to expand Erwin's conscious mind through the use of
+Java. That would be embarassing.
+
 == Registering new functionality ==
 
 Erwin does not willy nilly accept extensions to his brain. He requires
