@@ -30,6 +30,9 @@
 (require 'json)
 (require 'kv)
 
+(unless (fboundp 'kva)
+  (fset 'kva (function (lambda (key a) (cdr (assoc key alist))))))
+
 (defmacro comment (&rest args))
 
 (defun erwin-logger/make-proc ()
