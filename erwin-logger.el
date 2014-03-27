@@ -49,11 +49,18 @@ IRC channel and the json-data is a JSON record."
      (concat " *" temp-name "*")
      (concat " *" temp-name "*")
      (format
-      "while read date channel json
+      "while read -r date channel json
 do
    mkdir -p /tmp/erwinlogs/${channel}
    echo $json >> /tmp/erwinlogs/${channel}/${date}
 done"))))
+
+
+
+
+
+
+
 
 (defun erwin-logger/get-history (channel)
   "Get the history data from the most recent file for CHANNEL.
