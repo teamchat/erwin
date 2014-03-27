@@ -28,6 +28,7 @@
 (require 'dash)
 (require 's)
 (require 'json)
+(require 'kv)
 
 (defmacro comment (&rest args))
 
