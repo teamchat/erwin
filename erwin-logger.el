@@ -30,54 +30,6 @@
 
 (defmacro comment (&rest args))
 
-(defun erwin-logger/receive-hook (process cmd sender args text)
-  "Hook attached to rcirc to intercept the upstream irc server."
-  (message
-   "erwin-logger %s"
-   (json-encode (list :process (process-id process)
-                      :command cmd
-                      :sender sender
-                      :args args
-                      :text text)))
-  ;; FIXME - Should we check to see if this is a shoes-off session?
-  (comment
-   (condition-case nil
-       (let ((cmdstr
-              (or (aget shoes-off/cmd-names (string-to-number cmd)) cmd)))
-         (when (equal cmdstr "RPL_LIST")
-           (apply 'shoes-off/list-entry process args))
-         (when (equal cmdstr "WELCOME")
-           (shoes-off/welcome process text))
-         (when (member
-                cmdstr
-                shoes-off/cache-response-welcome-commands)
-           (shoes-off/puthash process
-                              :shoes-off-welcome-cache
-                              cmdstr text))
-         (when (equal cmdstr "PART")
-           (message "shoes-off/receive-hook [%s] %s (%s) |%s|"
-                    process cmd args text)
-           (shoes-off/part process args text))
-         (when (equal cmdstr "JOIN")
-           (shoes-off/join process args text))
-         ;; if we have a current bouncer con then send stuff there
-         (awhen (process-get process :shoes-off-connection)
-           (catch :shoes-off-escape-privmsg
-             (when (and
-                    (equal cmdstr "PRIVMSG")
-                    (functionp shoes-off-receive-privmsg-plugin))
-               (funcall shoes-off-receive-privmsg-plugin
-                        process sender args))
-             ;; If we didn't throw carry on call send-string
-             (rcirc-send-string it text))))
-     (error "whoops! something went wrong!!!"))))
-
-;; Setup the receive hook for the upstream IRC connection
-(when (symbol-value 'erwin-logger-add-receive-hook)
-  (add-hook
-   'rcirc-receive-message-hooks
-   'erwin-logger/receive-hook))
-
 (defun erwin-logger/make-proc ()
   "Make a process for logging erwin data.
 
