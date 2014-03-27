@@ -45,6 +45,8 @@ The process is a pipe mill taking an input line with:
 where the date is a YYYY-MM-DDTHH:MM:SS date, the channel is the
 IRC channel and the json-data is a JSON record."
   (let ((temp-name (make-temp-name "erwin-logger")))
+    ;; FIXME - we need to abstract the location of the logs
+    ;; don't forget to update the test
     (start-process-shell-command
      (concat " *" temp-name "*")
      (concat " *" temp-name "*")
@@ -54,12 +56,6 @@ do
    mkdir -p /tmp/erwinlogs/${channel}
    echo $json >> /tmp/erwinlogs/${channel}/${date}
 done"))))
-
-
-
-
-
-
 
 
 (defun erwin-logger/get-history (channel)
