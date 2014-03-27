@@ -80,7 +80,10 @@ character."
 (defun erwin-logger/history-send (process sender channel)
   "Send the history to the SENDER over rcirc PROCESS."
   (let ((history (erwin-logger/get-history channel)))
-    (--each history
+    (--each
+        (-filter
+         (lambda (e) (equal "PRIVMSG" (kva 'response e)))
+         history)
       (rcirc-send-message
        process sender ; the target is the same
        (format "%s %s: %s"
