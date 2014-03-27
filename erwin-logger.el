@@ -142,7 +142,7 @@ deliver the history data in a private message."
 ;; control for whether this does any work.
 (add-hook
  'rcirc-print-functions
- 'erwin-logger/receive-print-hook)
+ 'erwin-logger/history-receive-print-hook)
 
 
 (provide 'erwin-logger)
