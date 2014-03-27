@@ -79,47 +79,65 @@ character."
       (while (condition-case err (push (json-read) hist) (error nil)))
       (reverse hist))))
 
-(defun erwin-logger/receive-print-hook (process sender response target text)
-  "Print hook that sends channel data to a log structure in JSON."
-  (let* ((time-str (format-time-string "%Y-%m-%dT%H:%M:%S" (current-time)))
-         (procbuf (process-buffer process))
-         (server (with-current-buffer procbuf  rcirc-server))
-         (my-nick (with-current-buffer procbuf  rcirc-nick))
-         (json
-          (json-encode (list :server server
-                             :time time-str
-                             :response response
-                             :sender sender
-                             :target target
-                             :text text))))
-    ;;(message json)
-    (cond
-      ((or 
-        (string-match (format "^%s:[ ]*history\\([ ]+\\(.*\\)\\)*" my-nick) text)
-        (and (equal target my-nick)
-             (string-match "^history\\([ ]+\\(.*\\)\\)*" text)))
-       (let ((history (erwin-logger/get-history (substring target 1))))
-         (--each history
-           (rcirc-send-message
-            process sender ; the target is the same
-            (format "%s %s: %s"
-                    (kva 'time it)
-                    (kva 'sender it)
-                    (kva 'text it))))))
-      (t
-       (condition-case err
-           (when (s-starts-with? "#" target) ; Only do it for channels
-             (let* ((day (substring time-str 0 10))
-                    (logger-proc (with-current-buffer procbuf
-                                   (or
-                                    (when (local-variable-p 'erwin-logger-proc)
-                                      (symbol-value 'erwin-logger-proc))
-                                    (set (make-local-variable 'erwin-logger-proc)
-                                         (erwin-logger/make-proc))))))
-               (process-send-string
-                logger-proc
-                (concat day " " (substring target 1) " " json "\n"))))
-         (error nil))))))
+(defun erwin-logger/history-send (process sender channel)
+  "Send the history to the SENDER over rcirc PROCESS."
+  (let ((history (erwin-logger/get-history channel)))
+    (--each history
+      (rcirc-send-message
+       process sender ; the target is the same
+       (format "%s %s: %s"
+               (kva 'time it)
+               (kva 'sender it)
+               (kva 'text it))))))
+
+(defun erwin-logger/get-logger-proc (rcirc-process)
+  "Get the logging mill shell process for the RCIRC-PROCESS.
+
+The mill process is stored in a buffer local variable on the
+RCIRC-PROCESS process buffer."
+  (let ((rcirc-buffer (process-buffer rcirc-process)))
+    (with-current-buffer procbuf
+      (or
+       (when (local-variable-p 'erwin-logger-proc)
+         (symbol-value 'erwin-logger-proc))
+       (set (make-local-variable 'erwin-logger-proc)
+            (erwin-logger/make-proc))))))
+
+(defconst erwin-logger-do-history t
+  "Whether to collect and respond with history")
+
+(defun erwin-logger/history-receive-print-hook (process sender response target text)
+  "Print hook that sends channel data to a log structure in JSON.
+
+History is stored in a structure of `channel-name/day' where
+`day' is the file with data in. 
+
+The word `history' when sent to the nick running this hook will
+deliver the history data in a private message."
+  (when erwin-logger-do-history
+    (let* ((time-str (format-time-string "%Y-%m-%dT%H:%M:%S" (current-time)))
+           (procbuf (process-buffer process))
+           (server (with-current-buffer procbuf  rcirc-server))
+           (my-nick (with-current-buffer procbuf  rcirc-nick))
+           (plist (list :server server :time time-str :response response
+                        :sender sender :target target :text text))
+           (json (json-encode plist)))
+      ;;(message json)
+      (cond
+        ;; A request for history
+        ((or 
+          (string-match (format "^%s:[ ]*history\\([ ]+\\(.*\\)\\)*" my-nick) text)
+          (and (equal target my-nick)
+               (string-match "^history\\([ ]+\\(.*\\)\\)*" text)))
+         (erwin-logger/history-send process sender (substring target 1)))
+        (t
+         (condition-case err
+             (when (s-starts-with? "#" target)
+               (let ((day (substring time-str 0 10)))
+                 (process-send-string
+                  (erwin-logger/get-logger-proc process)
+                  (concat day " " (substring target 1) " " json "\n"))))            
+           (error nil)))))))
 
 ;; Setup the receive hook for the upstream IRC connection
 (add-hook  ; fixme - needs some config
