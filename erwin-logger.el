@@ -135,8 +135,10 @@ deliver the history data in a private message."
                   (concat day " " (substring target 1) " " json "\n"))))            
            (error nil)))))))
 
-;; Setup the receive hook for the upstream IRC connection
-(add-hook  ; fixme - needs some config
+;; Setup the receive hook for the upstream IRC connection -- we don't
+;; need to if this really because `erwin-logger-do-history' is a
+;; control for whether this does any work.
+(add-hook
  'rcirc-print-functions
  'erwin-logger/receive-print-hook)
 
