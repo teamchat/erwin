@@ -35,6 +35,9 @@
 
 (defmacro comment (&rest args))
 
+(defconst erwin-logger/log-dir "/tmp/erwinlogs"
+  "The location of the history files.")
+
 (defun erwin-logger/make-proc ()
   "Make a process for logging erwin data.
 
@@ -45,17 +48,16 @@ The process is a pipe mill taking an input line with:
 where the date is a YYYY-MM-DDTHH:MM:SS date, the channel is the
 IRC channel and the json-data is a JSON record."
   (let ((temp-name (make-temp-name "erwin-logger")))
-    ;; FIXME - we need to abstract the location of the logs
-    ;; don't forget to update the test
     (start-process-shell-command
      (concat " *" temp-name "*")
      (concat " *" temp-name "*")
      (format
-      "while read -r date channel json
+      "export LOGDIR=%s
+while read -r date channel json
 do
-   mkdir -p /tmp/erwinlogs/${channel}
-   echo $json >> /tmp/erwinlogs/${channel}/${date}
-done"))))
+   mkdir -p ${LOGDIR}/${channel}
+   echo $json >> ${LOGDIR}/${channel}/${date}
+done" erwin-logger/log-dir))))
 
 
 (defun erwin-logger/get-history (channel)
@@ -69,7 +71,7 @@ character."
            (-sort
             'string-lessp
             (directory-files
-             (format "/tmp/erwinlogs/%s/" channel) t "^[^.]")))))
+             (format "%s/%s/" erwin-logger/log-dir channel) t "^[^.]")))))
     (goto-char (point-min))
     (let (hist)
       (while (condition-case err (push (json-read) hist) (error nil)))

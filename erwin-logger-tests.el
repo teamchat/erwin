@@ -33,8 +33,7 @@
 We know what the mill does so we can fake the file it uses by
 sending it dummy data."
   (let ((mill (erwin-logger/make-proc))
-        ;; We probably need to abstract the location of the log files
-        (file "/tmp/erwinlogs/testchannel/2014-14-01")
+        (file (format "%s/testchannel/2014-14-01" erwin-logger/log-dir))
         (text "this is just some text \"with some quotes\""))
     (when (file-exists-p file) (delete-file file))
     (unwind-protect
