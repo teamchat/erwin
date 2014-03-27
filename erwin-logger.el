@@ -27,6 +27,7 @@
 (require 'rcirc)
 (require 'dash)
 (require 's)
+(require 'json)
 
 (defmacro comment (&rest args))
 
