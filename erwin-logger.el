@@ -113,6 +113,16 @@ RCIRC-PROCESS process buffer."
 (defconst erwin-logger-do-history t
   "Whether to collect and respond with history")
 
+(defun erwin-logger/get-quit-hash (rcirc-process)
+  "Get a hash used to store when IRC users quit."
+  (let ((rcirc-buffer (process-buffer rcirc-process)))
+    (with-current-buffer rcirc-buffer
+      (or
+       (when (local-variable-p 'erwin-quit-hash)
+         (symbol-value 'erwin-quit-hash))
+       (set (make-local-variable 'erwin-quit-hash)
+            (make-hash-table :test 'equal))))))
+
 (defun erwin-logger/history-receive-print-hook (process sender response target text)
   "Store and respond history, ask for \"history\".
 
