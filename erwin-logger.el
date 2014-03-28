@@ -108,7 +108,7 @@ RCIRC-PROCESS process buffer."
   "Whether to collect and respond with history")
 
 (defun erwin-logger/history-receive-print-hook (process sender response target text)
-  "Print hook that sends channel data to a log structure in JSON.
+  "Store and respond history, ask for \"history\".
 
 History is stored in a structure of `channel-name/day' where
 `day' is the file with data in. 
@@ -150,7 +150,7 @@ deliver the history data in a private message."
  'erwin-logger/history-receive-print-hook)
 
 (defun erwin-logger/ping-receive-print-hook (process sender response target text)
-  "Simple ping. 
+  "Ping/pong response, ask \"ping\".
 
 The response goes back to the channel from where it was given or
 inside the private chat where it was issued."
@@ -165,6 +165,38 @@ inside the private chat where it was issued."
 (add-hook
  'rcirc-print-functions
  'erwin-logger/ping-receive-print-hook)
+
+(defun erwin-logger/help-robot-funcs ()
+  "List the robot functions."
+  (-keep
+   (lambda (fn)
+     (when (documentation fn)
+       (save-match-data
+         (let ((name (symbol-name fn)))
+           (string-match
+            (format "erwin\\(-[a-z]+\\)*/\\([a-z0-9_-]+\\)-receive-print-hook")
+            name)
+           (format
+            "'%s' -- %s"
+            (match-string 2 name)
+            (elt (split-string (documentation fn) "\n") 0))))))
+   rcirc-print-functions))
+
+(defun erwin-logger/help-receive-print-hook (process sender response target text)
+  "Explain what this robot does, ask for \"help\"."
+  (let* ((procbuf (process-buffer process))
+         (my-nick (with-current-buffer procbuf  rcirc-nick)))
+    (when (or (string-match (format "^%s: help$" my-nick) text)
+              (and (equal target sender)
+                   (string-match "^help$" text)))
+      (-each
+       (erwin-logger/help-robot-funcs)
+       (lambda (help-line)
+         (rcirc-send-message process target (concat sender ": " help-line)))))))
+
+(add-hook
+ 'rcirc-print-functions
+ 'erwin-logger/help-receive-print-hook)
 
 (provide 'erwin-logger)
 
