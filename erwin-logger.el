@@ -229,6 +229,22 @@ inside the private chat where it was issued."
  'rcirc-print-functions
  'erwin-logger/help-receive-print-hook)
 
+(defun erwin-logger/origin-receive-print-hook (process sender response target text)
+  "Explain where the code for this robot is, ask for \"origin\"."
+  (let* ((procbuf (process-buffer process))
+         (my-nick (with-current-buffer procbuf  rcirc-nick)))
+    (when (or (string-match (format "^%s: origin$" my-nick) text)
+              (and (equal target sender)
+                   (string-match "^origin$" text)))
+      (rcirc-send-message
+       process target
+       (concat sender
+               ": you can see inside me here - http://github.com/teamchat/erwin")))))
+
+(add-hook
+ 'rcirc-print-functions
+ 'erwin-logger/origin-receive-print-hook)
+
 (provide 'erwin-logger)
 
 ;;; erwin-logger.el ends here
