@@ -140,23 +140,38 @@ deliver the history data in a private message."
                         :sender sender :target target :text text))
            (json (json-encode plist)))
       ;;(message json)
-      (cond
-        ;; A request for history
-        ((or 
-          (string-match (format "^%s:[ ]*history\\([ ]+\\(.*\\)\\)*" my-nick) text)
-          ;; when it's a private message target==sender ... but also
-          ;; we don't know what channel to deliver
-          (and (equal target sender)
-               (string-match "^history[ ]+\\(.+\\)" text)))
-         (erwin-logger/history-send process sender (substring target 1)))
-        (t
-         (condition-case err
-             (when (s-starts-with? "#" target)
-               (let ((day (substring time-str 0 10)))
-                 (process-send-string
-                  (erwin-logger/get-logger-proc process)
-                  (concat day " " (substring target 1) " " json "\n"))))            
-           (error nil)))))))
+      (save-match-data
+        (cond
+          ;; A request for history
+          ((string-match (format "^%s:[ ]*history\\([ ]+\\(.*\\)\\)*" my-nick) text)
+           (erwin-logger/history-send
+            process sender
+            (substring target 1) ; the channel
+            (gethash sender (erwin-logger/get-quit-hash process))))
+          ;; A private request for history
+          ((and (equal target sender)
+                (string-match "^history\\([ ]+\\(.+\\)\\)*" text))
+           (if (match-string 1 text)
+               (erwin-logger/history-send
+                process sender
+                (match-string 2 text) ; the channel
+                (gethash sender (erwin-logger/get-quit-hash process)))
+               ;; Else...
+               (rcirc-send-message process target "say \"history channel\"")))
+          (t
+           (condition-case err
+               (progn
+                 (when (equal response "QUIT")
+                   (puthash
+                    sender (format-time-string "%Y-%m-%dT%H:%M:%S" (current-time))
+                    (erwin-logger/get-quit-hash process)))
+                 (when (s-starts-with? "#" target)
+                   (let ((day (substring time-str 0 10)))
+                     (process-send-string
+                      (erwin-logger/get-logger-proc process)
+                      (concat day " " (substring target 1) " " json "\n")))))            
+             (error nil))))))))
+
 
 ;; Setup the receive hook for the upstream IRC connection -- we don't
 ;; need to if this really because `erwin-logger-do-history' is a
