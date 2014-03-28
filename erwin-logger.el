@@ -128,8 +128,10 @@ deliver the history data in a private message."
         ;; A request for history
         ((or 
           (string-match (format "^%s:[ ]*history\\([ ]+\\(.*\\)\\)*" my-nick) text)
-          (and (equal target my-nick)
-               (string-match "^history\\([ ]+\\(.*\\)\\)*" text)))
+          ;; when it's a private message target==sender ... but also
+          ;; we don't know what channel to deliver
+          (and (equal target sender)
+               (string-match "^history[ ]+\\(.+\\)" text)))
          (erwin-logger/history-send process sender (substring target 1)))
         (t
          (condition-case err
@@ -147,6 +149,22 @@ deliver the history data in a private message."
  'rcirc-print-functions
  'erwin-logger/history-receive-print-hook)
 
+(defun erwin-logger/ping-receive-print-hook (process sender response target text)
+  "Simple ping. 
+
+The response goes back to the channel from where it was given or
+inside the private chat where it was issued."
+  (let* ((procbuf (process-buffer process))
+         (my-nick (with-current-buffer procbuf  rcirc-nick)))
+    (message "%s %s %s" sender target text)
+    (when (or(string-match (format "^%s: ping" my-nick) text)
+             (and (equal target sender)
+                  (string-match "^ping$" text)))
+      (rcirc-send-message process target (format "%s: pong" sender)))))
+
+(add-hook
+ 'rcirc-print-functions
+ 'erwin-logger/ping-receive-print-hook)
 
 (provide 'erwin-logger)
 
