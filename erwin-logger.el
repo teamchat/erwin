@@ -60,7 +60,7 @@ do
 done" erwin-logger/log-dir))))
 
 
-(defun erwin-logger/get-history (channel)
+(defun erwin-logger/get-history (channel &optional date)
   "Get the history data from the most recent file for CHANNEL.
 
 CHANNEL must be missing the leading # or whatever special
@@ -85,7 +85,7 @@ character."
 
 (defun erwin-logger/history-send (process sender channel &optional date)
   "Send the history to the SENDER over rcirc PROCESS."
-  (let ((history (erwin-logger/get-history channel)))
+  (let ((history (erwin-logger/get-history channel date)))
     (--each
         (-filter
          (lambda (e) (equal "PRIVMSG" (kva 'response e)))
