@@ -71,13 +71,19 @@ character."
            (-sort
             'string-lessp
             (directory-files
-             (format "%s/%s/" erwin-logger/log-dir channel) t "^[^.]")))))
+             (format "%s/%s/" erwin-logger/log-dir channel) t "^[0-9]")))))
     (goto-char (point-min))
-    (let (hist)
-      (while (condition-case err (push (json-read) hist) (error nil)))
-      (reverse hist))))
+    (let ((history
+           (reverse
+            (let (hist)
+              (while (condition-case err (push (json-read) hist) (error nil)))
+              hist))))
+      (if (not date)
+          history
+          ;; Else filter it
+          (-filter (lambda (r) (string-lessp date (kva 'time r))) history)))))
 
-(defun erwin-logger/history-send (process sender channel)
+(defun erwin-logger/history-send (process sender channel &optional date)
   "Send the history to the SENDER over rcirc PROCESS."
   (let ((history (erwin-logger/get-history channel)))
     (--each
