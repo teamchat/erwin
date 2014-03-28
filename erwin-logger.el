@@ -147,15 +147,19 @@ deliver the history data in a private message."
            (erwin-logger/history-send
             process sender
             (substring target 1) ; the channel
-            (gethash sender (erwin-logger/get-quit-hash process))))
+            (or (match-string 2 text)
+                (gethash sender (erwin-logger/get-quit-hash process)))))
           ;; A private request for history
           ((and (equal target sender)
-                (string-match "^history\\([ ]+\\(.+\\)\\)*" text))
+                (string-match
+                 "^history\\([ ]+\\([^ ]+\\)\\([ ]+\\(.*\\)\\)*\\)*"
+                 text))
            (if (match-string 1 text)
                (erwin-logger/history-send
                 process sender
                 (match-string 2 text) ; the channel
-                (gethash sender (erwin-logger/get-quit-hash process)))
+                (or (match-string 4 text) ; possible argument
+                    (gethash sender (erwin-logger/get-quit-hash process))))
                ;; Else...
                (rcirc-send-message process target "say \"history channel\"")))
           (t
