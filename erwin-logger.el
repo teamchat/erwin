@@ -156,10 +156,10 @@ The response goes back to the channel from where it was given or
 inside the private chat where it was issued."
   (let* ((procbuf (process-buffer process))
          (my-nick (with-current-buffer procbuf  rcirc-nick)))
-    (message "%s %s %s" sender target text)
-    (when (or(string-match (format "^%s: ping" my-nick) text)
-             (and (equal target sender)
-                  (string-match "^ping$" text)))
+    ;;(message "%s %s %s" sender target text)
+    (when (or (string-match (format "^%s: ping" my-nick) text)
+              (and (equal target sender)
+                   (string-match "^ping$" text)))
       (rcirc-send-message process target (format "%s: pong" sender)))))
 
 (add-hook
